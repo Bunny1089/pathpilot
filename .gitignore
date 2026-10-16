@@ -1,0 +1,41 @@
+# Local SQLite Database files (Never commit database state)
+*.db
+backend/pathpilot.db
+backend/test.db
+chroma_db/
+chromadb_data/
+
+# Python virtual environments & dependencies
+.venv/
+venv/
+env/
+ENV/
+*.eggs
+*.egg-info/
+.eggs/
+
+# Python cache & compiled code
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Node / React dependencies & build output
+node_modules/
+dist/
+dist-ssr/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Secrets (DO NOT COMMIT)
+.env
+.env.local
+.env.*.local
+
+# OS system files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* Custom scrollbar override for dark theme commands */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617; /* Slate 950 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b; /* Slate 800 */
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155; /* Slate 700 */
+}
