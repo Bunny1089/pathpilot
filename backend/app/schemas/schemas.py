@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional, List, Dict
 
@@ -27,8 +27,7 @@ class TaskOut(TaskBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Goal Schemas
 class GoalBase(BaseModel):
@@ -53,8 +52,7 @@ class GoalOut(GoalBase):
     updated_at: datetime
     tasks: List[TaskOut] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Profile Schemas
 class ProfileBase(BaseModel):
@@ -72,8 +70,7 @@ class ProfileOut(ProfileBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # User Schemas
 class UserBase(BaseModel):
@@ -88,8 +85,7 @@ class UserOut(UserBase):
     created_at: datetime
     profile: Optional[ProfileOut] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Job Description Schemas
 class JobDescriptionTextPayload(BaseModel):
@@ -181,8 +177,7 @@ class CareerStateOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class JobApprovalPayload(BaseModel):
     approved_job_indexes: List[int]

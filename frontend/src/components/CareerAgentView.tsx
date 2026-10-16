@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiService } from '../services/api';
 import type { CareerState } from '../services/api';
 import { 
@@ -73,6 +73,23 @@ export const CareerAgentView: React.FC<CareerAgentViewProps> = ({ onTasksUpdated
     }
   };
 
+  const handleStep = useCallback(async () => {
+    if (!careerState || stepping) return;
+    setStepping(true);
+    setError(null);
+    try {
+      const updated = await apiService.stepAgentSession();
+      setCareerState(updated);
+      if (updated.status === 'paused_for_approval') {
+        initializeApprovalCheckboxes(updated);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during step execution.");
+    } finally {
+      setStepping(false);
+    }
+  }, [careerState, stepping]);
+
   // Auto-advance logic
   useEffect(() => {
     if (!careerState || !autoRun || stepping) return;
@@ -83,7 +100,7 @@ export const CareerAgentView: React.FC<CareerAgentViewProps> = ({ onTasksUpdated
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [careerState, autoRun, stepping]);
+  }, [careerState, autoRun, stepping, handleStep]);
 
   const handleStartSession = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,23 +116,6 @@ export const CareerAgentView: React.FC<CareerAgentViewProps> = ({ onTasksUpdated
       setError(err.message || "Failed to initialize orchestrator session.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleStep = async () => {
-    if (!careerState || stepping) return;
-    setStepping(true);
-    setError(null);
-    try {
-      const updated = await apiService.stepAgentSession();
-      setCareerState(updated);
-      if (updated.status === 'paused_for_approval') {
-        initializeApprovalCheckboxes(updated);
-      }
-    } catch (err: any) {
-      setError(err.message || "An error occurred during step execution.");
-    } finally {
-      setStepping(false);
     }
   };
 
@@ -149,7 +149,7 @@ export const CareerAgentView: React.FC<CareerAgentViewProps> = ({ onTasksUpdated
       setCareerState(null);
       setGoalInput('');
       setApprovedIndexes({});
-    } catch (err: any) {
+    } catch {
       setError("Failed to reset orchestrator session.");
     } finally {
       setLoading(false);

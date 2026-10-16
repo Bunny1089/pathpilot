@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import pymupdf as fitz
 import re
 
 def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:

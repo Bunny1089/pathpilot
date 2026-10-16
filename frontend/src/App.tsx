@@ -35,7 +35,7 @@ function App() {
       } else {
         setBackendConnected(false);
       }
-    } catch (err) {
+    } catch {
       setBackendConnected(false);
     }
   };

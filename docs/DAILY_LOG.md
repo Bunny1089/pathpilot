@@ -97,3 +97,56 @@ This document records daily progress, verified test and build results, environme
 - **Remote / Push Status:** Configured `origin` to `https://github.com/Bunny1089/pathpilot.git` and pushed successfully (`main` tracking `origin/main`).
 - **Application Code Rewritten:** None (Strict audit mode; verified existing code without rewrites).
 - **Next Day's Goal (Day 2):** Stabilize setup and configuration — address configuration deprecations, verify environment variables, test startup without credentials, and validate configuration integrity.
+
+---
+
+## Day 2 — Stabilize Setup and Configuration
+- **Date:** 2026-10-17
+- **Milestone:** Day 2 — Stabilize setup and configuration
+- **Goal:** Reproducible local setup with clear configuration. Reconcile README with real codebase, resolve configuration/schema deprecations, verify sample files for privacy, eliminate frontend lint warnings, and add configuration validation tests.
+
+### 1. Commands Run & Actual Results
+
+| Command | Working Directory | Exit Code | Result Summary |
+|---|---|---|---|
+| PyMuPDF inspection of `sample_resume.pdf` | `pathpilot` | 0 | Verified 1-page synthetic persona ("Alex Pilot", `pilot@pathpilot.ai`, Stanford University, TechCorp). No sensitive or personal data found. |
+| Visual inspection of `resume_search_results.png` | `pathpilot` | 0 | Verified product screenshot showing search results for "FastAPI". No credentials, personal contacts, or private company data. |
+| `backend\.venv\Scripts\python.exe -m pytest backend/tests/test_config.py -v` | `pathpilot` | 0 | **5 of 5 passed** in 0.06s. Validated default settings, startup without external credentials, explicit key parsing, extra env var safety, and `from_attributes` ORM mapping. |
+| `backend\.venv\Scripts\python.exe -m pytest backend/tests/ -v` | `pathpilot` | 0 | **32 of 32 passed** in 1.09s. Deprecation warnings dropped from 8 to 2 (only Starlette and ChromaDB third-party warnings remain; all internal Pydantic V2 and PyMuPDF warnings eliminated). |
+| `npm run lint` (`oxlint`) | `pathpilot/frontend` | 0 | **0 errors, 0 warnings** (down from 3 warnings). Resolved unused error variables and added `useCallback` to `handleStep`. |
+| `npm run build` (`tsc -b && vite build`) | `pathpilot/frontend` | 0 | Production build succeeded cleanly in 384ms. |
+| `git diff --check` | `pathpilot` | 0 | Verified zero whitespace, line ending, or formatting anomalies across all modified files. |
+
+---
+
+### 2. Changes Made & Rationale
+
+1. **Modernized Pydantic Settings (`backend/app/core/config.py`)**:
+   - Replaced deprecated Pydantic V1 `class Config:` with `model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")`.
+   - Added explicit attributes for `HOST`, `PORT`, `AI_PROVIDER`, and `GEMINI_API_KEY` matching `.env.example`.
+   - Added `extra="ignore"` to prevent unexpected OS environment variables from causing validation errors on startup.
+2. **Modernized Pydantic Schemas (`backend/app/schemas/schemas.py`)**:
+   - Replaced `class Config: from_attributes = True` with `model_config = ConfigDict(from_attributes=True)` on `TaskOut`, `GoalOut`, `ProfileOut`, `UserOut`, and `CareerStateOut`.
+   - Completely eliminated 5 Pydantic V2 migration warnings.
+3. **Modernized PyMuPDF Import (`backend/app/services/pdf_parser.py`)**:
+   - Replaced deprecated `import fitz` with `import pymupdf as fitz`, eliminating the deprecation notice.
+4. **Added Configuration Tests (`backend/tests/test_config.py`)**:
+   - 5 automated unit tests verifying safe defaults, credential-optional startup, environment variable parsing, and schema configuration.
+5. **Fixed Frontend Lint Warnings (`frontend/src/`)**:
+   - In `App.tsx`: Removed unused `err` parameter in `catch`.
+   - In `CareerAgentView.tsx`: Wrapped `handleStep` in `useCallback` to satisfy React hook dependency requirements in auto-advance `useEffect`, and removed unused `err` parameter in `handleReset`.
+6. **Reconciled `README.md`**:
+   - Replaced outdated "Phase 1: Foundation ONLY" disclaimer with an accurate architecture diagram, feature implementation matrix (Working, Mocked, and Future), root-based startup instructions (`python -m uvicorn backend.app.main:app --reload`), and advisory disclaimer.
+
+---
+
+### 3. Privacy & Security Review
+- **`sample_resume.pdf`**: Synthetic persona data only ("Alex Pilot").
+- **`resume_search_results.png`**: UI screenshot with generic tech project summaries.
+- **Tracked files**: Confirmed zero secrets, `.env` files, private API keys, or user credentials in the repository.
+
+---
+
+### 4. Git Status & Next Steps
+- **Suggested Commit:** `chore: stabilize local configuration and setup`
+- **Next Day's Goal (Day 3):** Backend quality baseline — inspect API error conventions, improve validation and status codes, strengthen CRUD test isolation, and ensure tests never contaminate developer database state.
