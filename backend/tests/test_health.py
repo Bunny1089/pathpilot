@@ -1,11 +1,1 @@
-def test_health_check(client):
-    """
-    Test that GET /api/health returns HTTP 200 and matches the expected payload schema.
-    """
-    response = client.get("/api/health")
-    assert response.status_code == 200
-    
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert data["app"] == "PathPilot Backend"
-    assert data["database"] == "connected"
+﻿from unittest.mock import MagicMockfrom sqlalchemy.exc import OperationalErrordef test_health_check(client):    """    Test that GET /api/health returns HTTP 200 and matches the expected payload schema.    """    response = client.get("/api/health")    assert response.status_code == 200    data = response.json()    assert data["status"] == "healthy"    assert data["app"] == "PathPilot Backend"    assert data["version"] == "0.1.0"    assert data["database"] == "connected"def test_health_check_database_failure(client, monkeypatch):    """    Test that GET /api/health gracefully returns HTTP 503 Service Unavailable    when the database connection is interrupted.    """    import backend.app.api.endpoints.health as health_module    # Simulate database execution error    mock_db = MagicMock()    mock_db.execute.side_effect = OperationalError("SELECT 1", {}, Exception("Database locked"))    response = client.get("/api/health")    assert response.status_code == 200  # Default testclient uses db_session override, let's test failure    # Now override get_db to return failing db    def failing_get_db():        yield mock_db    from backend.app.database.session import get_db    from backend.app.main import app    app.dependency_overrides[get_db] = failing_get_db    try:        err_response = client.get("/api/health")        assert err_response.status_code == 503        data = err_response.json()        assert data["status"] == "unhealthy"        assert "disconnected" in data["database"]    finally:        app.dependency_overrides.clear()

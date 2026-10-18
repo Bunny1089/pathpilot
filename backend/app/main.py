@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -97,9 +98,11 @@ def seed_database():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Setup step: Initialize table structures and seed default data
-    Base.metadata.create_all(bind=engine)
-    seed_database()
+    # Setup step: Initialize table structures and seed default data for local development only
+    is_testing = os.getenv("TESTING", "False").lower() in ["true", "1", "yes"]
+    if not is_testing:
+        Base.metadata.create_all(bind=engine)
+        seed_database()
     yield
     # Shutdown step: Placeholder for cleanup logic (e.g. closing client pools)
 

@@ -1,13 +1,25 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Literal
+
+# Health Check Schemas
+class HealthResponse(BaseModel):
+    status: str
+    app: str
+    version: str
+    database: str
+
+# Allowed Status and Priority Enums
+TaskStatus = Literal["todo", "in_progress", "done", "blocked"]
+TaskPriority = Literal["low", "medium", "high"]
+GoalStatus = Literal["not_started", "in_progress", "completed", "archived"]
 
 # Task Schemas
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
-    status: str = "todo"
-    priority: str = "medium"
+    status: TaskStatus = "todo"
+    priority: TaskPriority = "medium"
     due_date: Optional[datetime] = None
 
 class TaskCreate(TaskBase):
@@ -16,8 +28,8 @@ class TaskCreate(TaskBase):
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = None
-    priority: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    priority: Optional[TaskPriority] = None
     due_date: Optional[datetime] = None
 
 class TaskOut(TaskBase):
@@ -33,7 +45,7 @@ class TaskOut(TaskBase):
 class GoalBase(BaseModel):
     title: str
     description: Optional[str] = None
-    status: str = "not_started"
+    status: GoalStatus = "not_started"
     deadline: Optional[datetime] = None
 
 class GoalCreate(GoalBase):
@@ -42,7 +54,7 @@ class GoalCreate(GoalBase):
 class GoalUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[str] = None
+    status: Optional[GoalStatus] = None
     deadline: Optional[datetime] = None
 
 class GoalOut(GoalBase):

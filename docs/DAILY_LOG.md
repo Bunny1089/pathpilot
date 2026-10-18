@@ -147,6 +147,54 @@ This document records daily progress, verified test and build results, environme
 
 ---
 
-### 4. Git Status & Next Steps
-- **Suggested Commit:** `chore: stabilize local configuration and setup`
+- **Git Commit:** `8050420` (`chore: stabilize local configuration and setup`)
+- **Remote / Push Status:** Pushed successfully to `origin/main`.
 - **Next Day's Goal (Day 3):** Backend quality baseline — inspect API error conventions, improve validation and status codes, strengthen CRUD test isolation, and ensure tests never contaminate developer database state.
+
+---
+
+## Day 3 — Backend Quality Baseline
+- **Date:** 2026-10-18
+- **Milestone:** Day 3 — Backend quality baseline
+- **Goal:** Consistent API errors, reliable status codes, complete task CRUD paths, and dependable test database isolation.
+
+### 1. Commands Run & Actual Results
+
+| Command | Working Directory | Exit Code | Result Summary |
+|---|---|---|---|
+| `backend\.venv\Scripts\python.exe -m pytest backend/tests/test_health.py -v` | `pathpilot` | 0 | **2 of 2 passed** (0.32s). Validated healthy 200 response and degraded 503 response on database disconnection. |
+| `backend\.venv\Scripts\python.exe -m pytest backend/tests/test_dashboard.py -v` | `pathpilot` | 0 | **11 of 11 passed** (1.39s). Validated complete Task CRUD lifecycle (`POST`, `GET`, `PATCH`, `DELETE`), 404 handling, and 422 input validation. |
+| `backend\.venv\Scripts\python.exe -m pytest backend/tests/test_db.py -v` | `pathpilot` | 0 | **4 of 4 passed** (0.81s). Validated model CRUD, User cascade deletes, Goal cascade deletes, and zero contamination of local `pathpilot.db`. |
+| `backend\.venv\Scripts\python.exe -m pytest backend/tests/ -v` | `pathpilot` | 0 | **45 of 45 passed** in 3.41s (up from 32 tests). Zero test regressions. |
+| `npm run lint` (`oxlint`) | `pathpilot/frontend` | 0 | **0 errors, 0 warnings**. |
+| `npm run build` (`tsc -b && vite build`) | `pathpilot/frontend` | 0 | Production bundle built in 1.59s. |
+| `git diff --check` | `pathpilot` | 0 | Clean diff with zero whitespace or line-ending errors. |
+
+---
+
+### 2. Changes Made & Rationale
+
+1. **Guarded FastAPI Lifespan Against Real DB Contamination (`backend/app/main.py`)**:
+   - Discovered that the application lifespan unconditionally called `Base.metadata.create_all(bind=engine)` and `seed_database()`, which touched the real `pathpilot.db` even during test runs.
+   - Added `is_testing` environment check to skip local database seeding when running under `TESTING=True`.
+2. **Standardized Health Endpoint & Error Codes (`backend/app/api/endpoints/health.py`)**:
+   - Added `HealthResponse` schema to provide typed OpenAPI schema definitions.
+   - Return HTTP 503 Service Unavailable with `"status": "unhealthy"` if the database connectivity check fails.
+3. **Pydantic Validation Literals (`backend/app/schemas/schemas.py`)**:
+   - Added `TaskStatus`, `TaskPriority`, and `GoalStatus` type literals.
+   - Invalid task statuses (e.g. `"bogus"`) are rejected immediately with HTTP 422 Unprocessable Entity.
+4. **Complete Task CRUD Endpoints (`backend/app/api/endpoints/dashboard.py`)**:
+   - Added `POST /api/tasks` (status 201 Created) for creating tasks tied to the active user and optional goal.
+   - Added `GET /api/tasks/{task_id}` (status 200 or 404).
+   - Added `DELETE /api/tasks/{task_id}` (status 200 or 404).
+   - Retained existing `PATCH /api/tasks/{task_id}` and `GET /api/dashboard`.
+5. **Database Cascade & Isolation Tests (`backend/tests/test_db.py`)**:
+   - Verified that deleting a `User` cascades and deletes associated profiles, goals, tasks, resumes, and career states.
+   - Verified that deleting a `Goal` cascades and cleans up associated tasks.
+   - Verified that test sessions execute exclusively in-memory (`sqlite://`) and never mutate `pathpilot.db`.
+
+---
+
+### 3. Git Status & Next Steps
+- **Suggested Commit:** `test: strengthen backend API and database coverage`
+- **Next Day's Goal (Day 4):** Resume upload contract and safety — design safe request/response schema, document file-size limits, validate PDF format/MIME, and ensure safe temporary-file handling with zero private data leakage in logs.
